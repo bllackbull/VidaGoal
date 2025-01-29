@@ -134,26 +134,36 @@ function updateUI(title, current, total, percent) {
     imageElement.src = "./images/1.png";
   }
 
-  if (percent >= 100 && state.cachedData.percent != 100) goalComplete();
+  if (percent == 100 && state.cachedData.percent != 100) triggerConfetti();
 
   pages[0] = {
     title,
-    description: `${formattedCurrent} از ${formattedTotal} (%${formattedPercent})`,
+    description: `${formattedCurrent} تومان از ${formattedTotal} تومان (%${formattedPercent})`,
   };
 }
 
-function goalComplete() {
-  const goalMessage = document.createElement("div");
-  goalMessage.classList.add("goal-message");
-  goalMessage.textContent = "😲😲😲 Donate goal completed!!! 😲😲😲";
+function triggerConfetti() {
+  // Left side confetti
+  confetti({
+    particleCount: 727,
+    angle: 90,
+    spread: 100,
+    origin: { x: 0, y: 0.6 },
+    gravity: 0.5,
+    drift: 0.2,
+    scalar: 1.5,
+  });
 
-  widget.appendChild(goalMessage);
-  widget.classList.add("goal-complete");
-
-  setTimeout(() => {
-    widget.classList.remove("goal-complete");
-    goalMessage.remove();
-  }, 5000);
+  // Right side confetti
+  confetti({
+    particleCount: 727,
+    angle: 90,
+    spread: 100,
+    origin: { x: 1, y: 0.6 },
+    gravity: 0.5,
+    drift: 0.2,
+    scalar: 1.5,
+  });
 }
 
 function changeContent() {
