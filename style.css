@@ -37,12 +37,12 @@
   position: relative;
   width: 0%;
   height: 100%;
-  /* background: linear-gradient(to right, var(--medium-green), var(--dark-green)); */
-  background-color: var(--medium-green);
+  background: linear-gradient(to right, var(--medium-green), var(--dark-green));
+  /* background-color: var(--medium-green); */
   transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
 }
 
-.progress::before,
+/* .progress::before,
 .progress::after {
   content: "";
   position: absolute;
@@ -60,7 +60,7 @@
   left: -15px;
   height: 70px;
   animation-duration: 1.2s;
-}
+} */
 
 .text {
   position: relative;
