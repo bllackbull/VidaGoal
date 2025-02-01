@@ -1,9 +1,12 @@
-const titleElement = document.querySelector(".title");
-const descriptionElement = document.querySelector(".description");
+const widget = document.querySelector(".widget");
 const progressElement = document.querySelector(".progress");
 const textElement = document.querySelector(".text");
+const titleElement = document.querySelector(".title");
+const descriptionElement = document.querySelector(".description");
+const titleOverlayElement = document.querySelector(".title-overlay");
+const desriptionOverlayElement = document.querySelector(".description-overlay");
 const imageElement = document.querySelector(".img");
-const widget = document.querySelector(".widget");
+const goalElement = document.querySelector(".goal");
 
 const API_KEY =
   "MjVjM2NlNTFlNWZiOTZjOEJESGtLQzd6bHovTjh4SnNQbXVNd3BISWgzMExBV2lFOWJlQmQ5TlJ5ZTA9";
@@ -17,6 +20,7 @@ const state = {
 
 let pages = [];
 let index = 0;
+let firstChange = true;
 
 function fetchData() {
   fetch(`https://api.reymit.ir/user/${API_KEY}/goal`)
@@ -110,8 +114,83 @@ function updateUI(title, current, total, percent) {
   const formattedPercent = convertToPersian(percent);
 
   progressElement.style.width = `${percent}%`;
+
+  if (percent > 7) {
+    titleOverlayElement.style.width = `${percent - 7}%`;
+    desriptionOverlayElement.style.width = `${percent - 7}%`;
+  }
+
   winkEffect();
 
+  if (
+    percent != 100 &&
+    percent >= 10 &&
+    percent.toString()[0] != state.cachedData.percent.toString()[0]
+  ) {
+    setImage(state.cachedData.percent);
+    moveImage(percent);
+  } else {
+    setImage(percent);
+  }
+
+  if (percent >= 100 && state.cachedData.percent < 100) completionAnimation();
+
+  pages[0] = {
+    title: `هدف: ${title}`,
+    description: `${formattedCurrent} تومان از ${formattedTotal} تومان (%${formattedPercent})`,
+  };
+}
+
+function completionAnimation() {
+  triggerConfetti();
+  const confettiInterval = setInterval(triggerConfetti, 1000);
+  setTimeout(() => {
+    clearInterval(confettiInterval);
+  }, 60_000);
+
+  widget.classList.add("scale");
+  titleOverlayElement.classList.add("complete");
+  desriptionOverlayElement.classList.add("complete");
+}
+
+function moveImage(percent) {
+  imageElement.style.animation = "none";
+
+  setTimeout(() => {
+    imageElement.style.transform =
+      "translateY(135%) translateX(20%) rotate(30deg) scale(1.2)";
+  }, 500);
+
+  setTimeout(() => {
+    imageElement.style.zIndex = "-1";
+    imageElement.style.transform =
+      "translateY(0) translateX(40%) rotate(30deg) scale(0.6)";
+  }, 1500);
+
+  setTimeout(() => {
+    setImage(percent);
+  }, 2000);
+
+  setTimeout(() => {
+    imageElement.style.transform =
+      "translateY(-135%) translateX(-10%) rotate(-60deg) scale(0.6)";
+  }, 2500);
+
+  setTimeout(() => {
+    imageElement.style.zIndex = "1";
+    imageElement.style.transform = "translateY(0) translateX(0) scale(1.2)";
+  }, 3500);
+
+  setTimeout(() => {
+    imageElement.style.transform = "scale(1)";
+  }, 4500);
+
+  setTimeout(() => {
+    imageElement.style.animation = "float 6s ease-in-out infinite alternate";
+  }, 5500);
+}
+
+function setImage(percent) {
   if (percent >= 90) {
     imageElement.src = "./images/10.png";
   } else if (percent >= 80) {
@@ -133,61 +212,104 @@ function updateUI(title, current, total, percent) {
   } else {
     imageElement.src = "./images/1.png";
   }
-
-  if (percent == 100 && state.cachedData.percent != 100) triggerConfetti();
-
-  pages[0] = {
-    title,
-    description: `${formattedCurrent} تومان از ${formattedTotal} تومان (%${formattedPercent})`,
-  };
 }
 
 function triggerConfetti() {
+  if (state.currentData.percent < 100) return;
+
+  const colors = [
+    "#daf7aa",
+    "#c0f3b0",
+    "#95bc8f",
+    "#518c4c",
+    "#10422f",
+    "#093223",
+  ];
+
   // Left side confetti
   confetti({
-    particleCount: 727,
-    angle: 90,
-    spread: 100,
-    origin: { x: 0, y: 0.6 },
+    particleCount: 200,
+    angle: -30,
+    spread: 120,
+    origin: { x: -0.1, y: 0 },
+    colors: colors,
     gravity: 0.5,
-    drift: 0.2,
-    scalar: 1.5,
+    drift: 0,
+    scalar: 1.8,
   });
 
   // Right side confetti
   confetti({
-    particleCount: 727,
-    angle: 90,
-    spread: 100,
-    origin: { x: 1, y: 0.6 },
+    particleCount: 200,
+    angle: 210,
+    spread: 120,
+    origin: { x: 1.1, y: 0 },
+    colors: colors,
     gravity: 0.5,
-    drift: 0.2,
-    scalar: 1.5,
+    drift: 0,
+    scalar: 1.8,
   });
 }
 
+function initializeContent() {
+  titleElement.textContent = pages[0].title;
+  descriptionElement.textContent = pages[0].description;
+
+  titleOverlayElement.textContent = pages[0].title;
+  desriptionOverlayElement.textContent = pages[0].description;
+
+  checkLength();
+
+  textElement.classList.add("show");
+  titleOverlayElement.classList.add("show");
+}
+
 function changeContent() {
+  if (state.cachedData.percent >= 100 && index == 1) return;
+
   textElement.classList.remove("show");
+  titleOverlayElement.classList.remove("show");
+
+  if (state.cachedData.percent >= 100) index = 0;
 
   setTimeout(() => {
+    if (firstChange) {
+      index = 1;
+      firstChange = false;
+    }
+
     titleElement.textContent = pages[index].title;
     descriptionElement.textContent = pages[index].description;
 
-    if (pages[index].title.length > 20) {
-      titleElement.style.fontSize = "1.3em";
-      textElement.style.paddingTop = "5%";
-    } else if (pages[index].title.length > 15) {
-      titleElement.style.fontSize = "1.8em";
-      textElement.style.paddingTop = "3%";
-    } else {
-      titleElement.style.fontSize = "2.3em";
-      textElement.style.paddingTop = "1%";
-    }
+    titleOverlayElement.textContent = pages[index].title;
+    desriptionOverlayElement.textContent = pages[index].description;
+
+    checkLength();
 
     textElement.classList.add("show");
+    titleOverlayElement.classList.add("show");
 
     index = (index + 1) % pages.length;
   }, 1000);
+}
+
+function checkLength() {
+  if (pages[index].title.length > 20) {
+    titleElement.style.fontSize = "1.4em";
+    textElement.style.paddingTop = "5%";
+
+    titleOverlayElement.style.fontSize = "1.4em";
+  } else if (pages[index].title.length > 15) {
+    titleElement.style.fontSize = "1.6em";
+    textElement.style.paddingTop = "4.5%";
+
+    titleOverlayElement.style.fontSize = "1.6em";
+  } else {
+    titleElement.style.fontSize = "1.7em";
+    textElement.style.paddingTop = "4%";
+
+    titleOverlayElement.style.fontSize = "1.7em";
+  }
 }
 
 function winkEffect() {
@@ -229,7 +351,7 @@ function loadData() {
 const { title, current, total, percent } = state.cachedData;
 updateUI(title, current, total, percent);
 
+initializeContent();
+
 setInterval(fetchData, TIMEOUT_DURATION);
 setInterval(changeContent, TIMEOUT_DURATION);
-
-changeContent();
